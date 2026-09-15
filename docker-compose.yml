@@ -1,0 +1,61 @@
+services:
+
+  rmi-registry:
+    build: .
+    container_name: rmi-registry
+    command: java common.RemoteRegistryServer
+    ports:
+      - "1099:1099"
+    networks:
+      - citysync-network
+
+  weather:
+    build: .
+    container_name: weather-server
+    command: java -Djava.rmi.server.hostname=weather weather.WeatherServer
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+    networks:
+      - citysync-network
+
+  hospital:
+    build: .
+    container_name: hospital-server
+    command: java -Djava.rmi.server.hostname=hospital hospital.HospitalServer
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+    networks:
+      - citysync-network
+
+  traffic:
+    build: .
+    container_name: traffic-server
+    command: java -Djava.rmi.server.hostname=traffic traffic.TrafficServer
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+    networks:
+      - citysync-network
+
+  emergency:
+    build: .
+    container_name: emergency-server
+    command: java -Djava.rmi.server.hostname=emergency emergency.EmergencyServer
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+      - weather
+      - hospital
+      - traffic
+    networks:
+      - citysync-network
+
+networks:
+  citysync-network:
+    driver: bridge
