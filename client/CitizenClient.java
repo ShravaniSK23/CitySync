@@ -2,7 +2,6 @@ package client;
 
 import common.CentralRegistryClient;
 import common.EmergencyService;
-import common.LoadBalancerService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,11 +54,11 @@ public class CitizenClient {
              * Connect to Emergency Server
              */
 
-            LoadBalancerService loadBalancer =
-        (LoadBalancerService)
-                CentralRegistryClient.lookup(
-                        "LoadBalancer"
-                );
+            EmergencyService emergency =
+                    (EmergencyService)
+                            CentralRegistryClient.lookup(
+                                    "EmergencyServer"
+                            );
 
             /*
              * Take number of requests
@@ -219,10 +218,10 @@ public class CitizenClient {
                 );
 
                 String response =
-        loadBalancer.reportIncident(
-                request.getLocation(),
-                request.getIncidentType()
-        );
+                        emergency.reportIncident(
+                                request.getLocation(),
+                                request.getIncidentType()
+                        );
 
                 System.out.println(
                         "[Citizen "

@@ -10,39 +10,26 @@ public class EmergencyServer {
 
         try {
 
-            /*
-             * Get server name from command line.
-             */
-
-            String serverName;
-
-            if (args.length > 0) {
-                serverName = args[0];
-            } else {
-                serverName = "EmergencyServer1";
-            }
-
             EmergencyImpl emergency =
-                    new EmergencyImpl(serverName);
+                    new EmergencyImpl("Emergency");
 
-            /*
-             * Register unique Emergency Server.
-             */
+            ElectionNodeImpl electionNode =
+                    new ElectionNodeImpl(1, "Emergency");
 
             CentralRegistryClient.register(
-                    serverName,
+                    "EmergencyElection", electionNode);
+
+            // Register Emergency service
+            CentralRegistryClient.register(
+                    "EmergencyServer",
                     emergency
             );
 
-            /*
-             * Register clock service
-             */
-
-            ClockService clockService =
-                    emergency;
+            // Register clock service
+            ClockService clockService = emergency;
 
             CentralRegistryClient.register(
-                    serverName + "Clock",
+                    "EmergencyClock",
                     clockService
             );
 
@@ -59,11 +46,11 @@ public class EmergencyServer {
             );
 
             System.out.println(
-                    "Server Name: " + serverName
+                    "Registered as: EmergencyServer"
             );
 
             System.out.println(
-                    "Registered as: " + serverName
+                    "Clock service: EmergencyClock"
             );
 
             System.out.println(
@@ -78,6 +65,7 @@ public class EmergencyServer {
                     "============================================"
             );
 
+            // Keep server alive
             Thread.currentThread().join();
 
         } catch (Exception e) {
