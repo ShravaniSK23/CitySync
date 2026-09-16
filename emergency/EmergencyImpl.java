@@ -28,13 +28,19 @@ public class EmergencyImpl extends UnicastRemoteObject
     private final LamportClock lamportClock =
             new LamportClock();
 
-    public EmergencyImpl() throws RemoteException {
-        super();
+    private final String serverName;
 
-        System.out.println(
-                "[Emergency Server] Thread pool created with 5 threads."
-        );
-    }
+public EmergencyImpl(String serverName)
+        throws RemoteException {
+
+    super();
+
+    this.serverName = serverName;
+
+    System.out.println(
+            "[" + serverName + "] Thread pool created with 5 threads."
+    );
+}
 
     @Override
     public String reportIncident(
@@ -82,13 +88,14 @@ public class EmergencyImpl extends UnicastRemoteObject
                     Thread.currentThread().getName();
 
             System.out.println(
-                    "[Thread " + threadId + "] "
-                            + threadName
-                            + " started processing "
-                            + incidentType
-                            + " at "
-                            + location
-            );
+        "[" + serverName + "] "
+                + "[Thread " + threadId + "] "
+                + threadName
+                + " started processing "
+                + incidentType
+                + " at "
+                + location
+);
 
             try {
 

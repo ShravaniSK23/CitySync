@@ -42,10 +42,10 @@ services:
     networks:
       - citysync-network
 
-  emergency:
+  emergency1:
     build: .
-    container_name: emergency-server
-    command: java -Djava.rmi.server.hostname=emergency emergency.EmergencyServer
+    container_name: emergency-server-1
+    command: java -Djava.rmi.server.hostname=emergency1 emergency.EmergencyServer EmergencyServer1
     environment:
       - RMI_REGISTRY_HOST=rmi-registry
     depends_on:
@@ -53,6 +53,48 @@ services:
       - weather
       - hospital
       - traffic
+    networks:
+      - citysync-network
+
+  emergency2:
+    build: .
+    container_name: emergency-server-2
+    command: java -Djava.rmi.server.hostname=emergency2 emergency.EmergencyServer EmergencyServer2
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+      - weather
+      - hospital
+      - traffic
+    networks:
+      - citysync-network
+
+  emergency3:
+    build: .
+    container_name: emergency-server-3
+    command: java -Djava.rmi.server.hostname=emergency3 emergency.EmergencyServer EmergencyServer3
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+      - weather
+      - hospital
+      - traffic
+    networks:
+      - citysync-network
+
+  loadbalancer:
+    build: .
+    container_name: citysync-load-balancer
+    command: java -Djava.rmi.server.hostname=loadbalancer loadbalancer.LoadBalancerServer
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+      - emergency1
+      - emergency2
+      - emergency3
     networks:
       - citysync-network
 
