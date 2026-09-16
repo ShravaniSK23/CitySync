@@ -829,7 +829,7 @@ public class ElectionNodeImpl
             int i = 0;
             i < NODE_IDS.length;
             i++
-    ) {
+    ) { 
 
         if (NODE_IDS[i] == currentId) {
 
