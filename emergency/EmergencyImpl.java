@@ -297,6 +297,7 @@ public class EmergencyImpl extends UnicastRemoteObject
         );
     }
 
+
     @Override
     public synchronized long getLamportTime()
             throws RemoteException {
