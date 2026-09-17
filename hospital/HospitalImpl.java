@@ -29,6 +29,11 @@ public class HospitalImpl extends UnicastRemoteObject
     }
 
     @Override
+public long getTime() throws RemoteException {
+    return physicalClock.getTime();
+}
+
+    @Override
     public synchronized String reserveBed(
             String location,
             long lamportTimestamp

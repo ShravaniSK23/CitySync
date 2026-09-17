@@ -1,12 +1,36 @@
 package clock;
 
-import common.ClockService;
 import common.CentralRegistryClient;
+import common.ClockService;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class BerkeleyCoordinator {
+
+    // Convert epoch milliseconds into readable actual time
+    private static String formatTime(long millis) {
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("HH:mm:ss.SSS");
+        return sdf.format(new Date(millis));
+    }
+
+    // Print both actual timestamp and readable time
+    private static void printClock(
+            String name,
+            ClockService clock) throws Exception {
+
+        long time = clock.getTime();
+
+        System.out.println(
+                String.format(
+                        "%-10s : %d  (%s)",
+                        name,
+                        time,
+                        formatTime(time)
+                )
+        );
+    }
 
     public static void main(String[] args) {
 
@@ -17,186 +41,204 @@ public class BerkeleyCoordinator {
             System.out.println("       BERKELEY CLOCK SYNCHRONIZATION");
             System.out.println("==========================================");
 
-            /*
-             * Connect to all SmartCity servers
-             * through the Central Registry.
-             */
-            Map<String, ClockService> servers =
-                    new LinkedHashMap<>();
-
-            servers.put(
-                    "Emergency",
+            // Get all participating clocks
+            ClockService emergency =
                     (ClockService) CentralRegistryClient.lookup(
-                            "EmergencyClock"
-                    )
-            );
+                            "EmergencyClock");
 
-            servers.put(
-                    "Hospital",
+            ClockService hospital =
                     (ClockService) CentralRegistryClient.lookup(
-                            "HospitalClock"
-                    )
-            );
+                            "HospitalClock");
 
-            servers.put(
-                    "Traffic",
+            ClockService traffic =
                     (ClockService) CentralRegistryClient.lookup(
-                            "TrafficClock"
-                    )
-            );
+                            "TrafficClock");
 
-            servers.put(
-                    "Weather",
+            ClockService weather =
                     (ClockService) CentralRegistryClient.lookup(
-                            "WeatherClock"
-                    )
-            );
+                            "WeatherClock");
 
-            /*
-             * STEP 1: GET CURRENT TIMES
-             */
+
+            // ------------------------------------------
+            // BEFORE SYNCHRONIZATION
+            // ------------------------------------------
 
             System.out.println();
             System.out.println("BEFORE SYNCHRONIZATION");
             System.out.println("------------------------------------------");
 
-            Map<String, Long> times =
-                    new LinkedHashMap<>();
+            long emergencyTime = emergency.getTime();
+            long hospitalTime = hospital.getTime();
+            long trafficTime = traffic.getTime();
+            long weatherTime = weather.getTime();
 
-            long totalTime = 0;
+            System.out.println(
+                    String.format(
+                            "Emergency : %d  (%s)",
+                            emergencyTime,
+                            formatTime(emergencyTime)
+                    )
+            );
 
-            for (Map.Entry<String, ClockService> entry
-                    : servers.entrySet()) {
+            System.out.println(
+                    String.format(
+                            "Hospital  : %d  (%s)",
+                            hospitalTime,
+                            formatTime(hospitalTime)
+                    )
+            );
 
-                long time =
-                        entry.getValue().getPhysicalTime();
+            System.out.println(
+                    String.format(
+                            "Traffic   : %d  (%s)",
+                            trafficTime,
+                            formatTime(trafficTime)
+                    )
+            );
 
-                times.put(
-                        entry.getKey(),
-                        time
-                );
+            System.out.println(
+                    String.format(
+                            "Weather   : %d  (%s)",
+                            weatherTime,
+                            formatTime(weatherTime)
+                    )
+            );
 
-                totalTime += time;
 
-                System.out.println(
-                        entry.getKey()
-                                + " : "
-                                + time
-                );
-            }
-
-            /*
-             * STEP 2: CALCULATE AVERAGE
-             */
+            // ------------------------------------------
+            // BERKELEY AVERAGE
+            // ------------------------------------------
 
             long averageTime =
-                    totalTime / times.size();
+                    (emergencyTime
+                            + hospitalTime
+                            + trafficTime
+                            + weatherTime) / 4;
 
             System.out.println();
             System.out.println(
                     "Berkeley Average Time : "
                             + averageTime
+                            + " ("
+                            + formatTime(averageTime)
+                            + ")"
             );
 
-            /*
-             * STEP 3: CALCULATE CORRECTIONS
-             */
+
+            // ------------------------------------------
+            // CALCULATE CORRECTIONS
+            // ------------------------------------------
+
+            long emergencyCorrection =
+                    averageTime - emergencyTime;
+
+            long hospitalCorrection =
+                    averageTime - hospitalTime;
+
+            long trafficCorrection =
+                    averageTime - trafficTime;
+
+            long weatherCorrection =
+                    averageTime - weatherTime;
+
 
             System.out.println();
             System.out.println("CLOCK CORRECTIONS");
             System.out.println("------------------------------------------");
 
-            Map<String, Long> corrections =
-                    new LinkedHashMap<>();
+            System.out.println(
+                    "Emergency correction : "
+                            + emergencyCorrection
+                            + " ms"
+            );
 
-            for (Map.Entry<String, Long> entry
-                    : times.entrySet()) {
+            System.out.println(
+                    "Hospital correction  : "
+                            + hospitalCorrection
+                            + " ms"
+            );
 
-                long correction =
-                        averageTime - entry.getValue();
+            System.out.println(
+                    "Traffic correction   : "
+                            + trafficCorrection
+                            + " ms"
+            );
 
-                corrections.put(
-                        entry.getKey(),
-                        correction
-                );
+            System.out.println(
+                    "Weather correction   : "
+                            + weatherCorrection
+                            + " ms"
+            );
 
-                System.out.println(
-                        entry.getKey()
-                                + " correction : "
-                                + correction
-                                + " ms"
-                );
-            }
 
-            /*
-             * STEP 4: APPLY CORRECTIONS
-             */
+            // ------------------------------------------
+            // APPLY CORRECTIONS
+            // ------------------------------------------
 
             System.out.println();
             System.out.println("APPLYING CORRECTIONS");
             System.out.println("------------------------------------------");
 
-            for (Map.Entry<String, ClockService> entry
-                    : servers.entrySet()) {
+            emergency.adjustClock(emergencyCorrection);
+            System.out.println(
+                    "Emergency adjusted by "
+                            + emergencyCorrection
+                            + " ms"
+            );
 
-                String serverName =
-                        entry.getKey();
+            hospital.adjustClock(hospitalCorrection);
+            System.out.println(
+                    "Hospital adjusted by "
+                            + hospitalCorrection
+                            + " ms"
+            );
 
-                long correction =
-                        corrections.get(serverName);
+            traffic.adjustClock(trafficCorrection);
+            System.out.println(
+                    "Traffic adjusted by "
+                            + trafficCorrection
+                            + " ms"
+            );
 
-                entry.getValue().adjustClock(
-                        correction
-                );
+            weather.adjustClock(weatherCorrection);
+            System.out.println(
+                    "Weather adjusted by "
+                            + weatherCorrection
+                            + " ms"
+            );
 
-                System.out.println(
-                        serverName
-                                + " adjusted by "
-                                + correction
-                                + " ms"
-                );
-            }
 
-            /*
-             * STEP 5: CHECK SYNCHRONIZED TIMES
-             */
+            // ------------------------------------------
+            // AFTER SYNCHRONIZATION
+            // ------------------------------------------
 
             System.out.println();
             System.out.println("AFTER SYNCHRONIZATION");
             System.out.println("------------------------------------------");
 
-            for (Map.Entry<String, ClockService> entry
-                    : servers.entrySet()) {
+            printClock("Emergency", emergency);
+            printClock("Hospital", hospital);
+            printClock("Traffic", traffic);
+            printClock("Weather", weather);
 
-                long synchronizedTime =
-                        entry.getValue()
-                                .getPhysicalTime();
-
-                System.out.println(
-                        entry.getKey()
-                                + " : "
-                                + synchronizedTime
-                );
-            }
 
             System.out.println();
-            System.out.println(
-                    "=========================================="
-            );
-
+            System.out.println("==========================================");
             System.out.println(
                     "Berkeley synchronization completed!"
             );
-
-            System.out.println(
-                    "=========================================="
-            );
+            System.out.println("==========================================");
+            System.out.println();
 
         } catch (Exception e) {
 
             System.out.println();
             System.out.println(
                     "Berkeley synchronization failed."
+            );
+
+            System.out.println(
+                    "Make sure all CitySync servers are running."
             );
 
             e.printStackTrace();

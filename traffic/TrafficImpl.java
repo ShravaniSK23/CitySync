@@ -27,6 +27,11 @@ public class TrafficImpl extends UnicastRemoteObject
     }
 
     @Override
+public long getTime() throws RemoteException {
+    return physicalClock.getTime();
+}
+
+    @Override
     public synchronized String createGreenCorridor(
             String location,
             long lamportTimestamp

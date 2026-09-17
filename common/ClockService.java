@@ -13,4 +13,6 @@ public interface ClockService extends Remote {
 
     long getLamportTime()
             throws RemoteException;
+
+    long getTime() throws RemoteException;
 }

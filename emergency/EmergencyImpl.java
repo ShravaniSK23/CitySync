@@ -42,6 +42,11 @@ public EmergencyImpl(String serverName)
     );
 }
 
+@Override
+public long getTime() throws RemoteException {
+    return physicalClock.getTime();
+}
+
     @Override
     public String reportIncident(
             String location,

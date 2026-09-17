@@ -27,6 +27,11 @@ public class WeatherImpl extends UnicastRemoteObject
     }
 
     @Override
+public long getTime() throws RemoteException {
+    return physicalClock.getTime();
+}
+
+    @Override
     public synchronized String getWeather(
             String location,
             long lamportTimestamp
