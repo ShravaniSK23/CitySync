@@ -56,6 +56,53 @@ services:
     networks:
       - citysync-network
 
+  worker1:
+    build: .
+    container_name: worker1-server
+    command: java -Djava.rmi.server.hostname=worker1 loadbalancer.WorkerServer Worker1 Worker1
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+    networks:
+      - citysync-network
+
+  worker2:
+    build: .
+    container_name: worker2-server
+    command: java -Djava.rmi.server.hostname=worker2 loadbalancer.WorkerServer Worker2 Worker2
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+    networks:
+      - citysync-network
+
+  worker3:
+    build: .
+    container_name: worker3-server
+    command: java -Djava.rmi.server.hostname=worker3 loadbalancer.WorkerServer Worker3 Worker3
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+    networks:
+      - citysync-network
+
+  loadbalancer:
+    build: .
+    container_name: load-balancer
+    command: java -Djava.rmi.server.hostname=loadbalancer loadbalancer.LoadBalancerServer
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+      - worker1
+      - worker2
+      - worker3
+    networks:
+      - citysync-network
+
 networks:
   citysync-network:
     driver: bridge

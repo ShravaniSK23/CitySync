@@ -2,18 +2,28 @@ package loadbalancer;
 
 import common.CentralRegistryClient;
 
-public class LoadBalancerServer {
+public class WorkerServer {
 
     public static void main(String[] args) {
 
         try {
 
-            LoadBalancerImpl loadBalancer =
-                    new LoadBalancerImpl();
+            String workerName =
+                    args.length > 0
+                            ? args[0]
+                            : "Worker";
+
+            String registryName =
+                    args.length > 1
+                            ? args[1]
+                            : workerName;
+
+            WorkerImpl worker =
+                    new WorkerImpl(workerName);
 
             CentralRegistryClient.register(
-                    "LoadBalancer",
-                    loadBalancer
+                    registryName,
+                    worker
             );
 
             System.out.println(
@@ -21,7 +31,7 @@ public class LoadBalancerServer {
             );
 
             System.out.println(
-                    "          LOAD BALANCER STARTED"
+                    "       " + workerName + " STARTED"
             );
 
             System.out.println(
@@ -29,11 +39,7 @@ public class LoadBalancerServer {
             );
 
             System.out.println(
-                    "Algorithm : Round Robin"
-            );
-
-            System.out.println(
-                    "Registered as : LoadBalancer"
+                    "Registered as: " + registryName
             );
 
             while (true) {
@@ -43,7 +49,8 @@ public class LoadBalancerServer {
         } catch (Exception e) {
 
             System.err.println(
-                    "Load Balancer server error"
+                    "[" + Thread.currentThread().getName()
+                            + "] Worker server error"
             );
 
             e.printStackTrace();

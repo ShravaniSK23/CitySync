@@ -1,148 +1,151 @@
 package loadbalancer;
 
 import common.CentralRegistryClient;
-import common.EmergencyService;
-import common.LoadBalancerService;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LoadBalancerImpl
         extends UnicastRemoteObject
         implements LoadBalancerService {
 
-    private final String[] emergencyServers = {
-            "EmergencyServer1",
-            "EmergencyServer2",
-            "EmergencyServer3"
-    };
-
     private int currentIndex = 0;
-    private int requestCount = 0;
 
-    public LoadBalancerImpl() throws RemoteException {
+    public LoadBalancerImpl()
+            throws RemoteException {
+
         super();
-
-        System.out.println(
-                "[Load Balancer] Started"
-        );
-
-        System.out.println(
-                "[Load Balancer] Algorithm: Round Robin"
-        );
     }
 
     /*
-     * Round Robin selection
+     * Finds workers that are actually reachable.
      */
-    private synchronized EmergencyService getNextServer()
+    private synchronized List<String> getAvailableWorkers() {
+
+        List<String> workers = new ArrayList<>();
+
+        String[] possibleWorkers = {
+                "Worker1",
+                "Worker2",
+                "Worker3"
+        };
+
+        for (String workerName : possibleWorkers) {
+
+            try {
+
+                WorkerService worker =
+                        (WorkerService)
+                                CentralRegistryClient.lookup(
+                                        workerName
+                                );
+
+                /*
+                 * Actually contact the worker.
+                 * This detects stale RMI registrations.
+                 */
+                worker.getWorkerName();
+
+                workers.add(workerName);
+
+                System.out.println(
+                        "[Load Balancer] "
+                                + workerName
+                                + " is AVAILABLE"
+                );
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "[Load Balancer] "
+                                + workerName
+                                + " is UNAVAILABLE"
+                );
+            }
+        }
+
+        return workers;
+    }
+
+    /*
+     * Round-Robin selection.
+     */
+    @Override
+    public synchronized String getNextWorker()
             throws RemoteException {
 
-        requestCount++;
+        List<String> workers =
+                getAvailableWorkers();
 
-    String serverName =
-            emergencyServers[currentIndex];
+        if (workers.isEmpty()) {
 
-    System.out.println(
-            "[Load Balancer] Request #" + requestCount
-                    + " -> " + serverName
-    );
+            throw new RemoteException(
+                    "No workers are currently available."
+            );
+        }
 
-    currentIndex =
-            (currentIndex + 1)
-                    % emergencyServers.length;
+        /*
+         * Prevent index from going outside
+         * the current available-worker list.
+         */
+        if (currentIndex >= workers.size()) {
+            currentIndex = 0;
+        }
+
+        String selectedWorker =
+                workers.get(currentIndex);
+
+        currentIndex =
+                (currentIndex + 1)
+                        % workers.size();
+
+        System.out.println(
+                "[Load Balancer] Selected: "
+                        + selectedWorker
+        );
+
+        return selectedWorker;
+    }
+
+    @Override
+    public String processRequest(String request)
+            throws RemoteException {
 
         try {
 
-            EmergencyService server =
-                    (EmergencyService)
+            String workerName =
+                    getNextWorker();
+
+            WorkerService worker =
+                    (WorkerService)
                             CentralRegistryClient.lookup(
-                                    serverName
+                                    workerName
                             );
 
             System.out.println(
-                    "[Load Balancer] Selected: "
-                            + serverName
+                    "[Load Balancer] Routing request: "
+                            + request
+                            + " → "
+                            + workerName
             );
 
-            return server;
+            return worker.processRequest(request);
 
         } catch (Exception e) {
 
             throw new RemoteException(
-                    "Could not connect to "
-                            + serverName,
+                    "Failed to process request",
                     e
             );
         }
     }
 
     @Override
-    public String reportIncident(
-            String location,
-            String incidentType)
+    public String getAlgorithm()
             throws RemoteException {
 
-        System.out.println(
-                "\n[Load Balancer] New request"
-        );
-
-        System.out.println(
-                "Location: " + location
-        );
-
-        System.out.println(
-                "Incident: " + incidentType
-        );
-
-        EmergencyService server =
-                getNextServer();
-
-        return server.reportIncident(
-                location,
-                incidentType
-        );
-    }
-
-    @Override
-    public String dispatchAmbulance(
-            String location)
-            throws RemoteException {
-
-        System.out.println(
-                "\n[Load Balancer] Ambulance request"
-        );
-
-        System.out.println(
-                "Location: " + location
-        );
-
-        EmergencyService server =
-                getNextServer();
-
-        return server.dispatchAmbulance(
-                location
-        );
-    }
-
-    @Override
-    public String dispatchFireTruck(
-            String location)
-            throws RemoteException {
-
-        System.out.println(
-                "\n[Load Balancer] Fire truck request"
-        );
-
-        System.out.println(
-                "Location: " + location
-        );
-
-        EmergencyService server =
-                getNextServer();
-
-        return server.dispatchFireTruck(
-                location
-        );
+        return "Round Robin";
     }
 }
