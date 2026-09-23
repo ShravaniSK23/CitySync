@@ -1,5 +1,4 @@
 services:
-
   rmi-registry:
     build: .
     container_name: rmi-registry
@@ -93,6 +92,20 @@ services:
     build: .
     container_name: load-balancer
     command: java -Djava.rmi.server.hostname=loadbalancer loadbalancer.LoadBalancerServer
+    environment:
+      - RMI_REGISTRY_HOST=rmi-registry
+    depends_on:
+      - rmi-registry
+      - worker1
+      - worker2
+      - worker3
+    networks:
+      - citysync-network
+
+  faulttolerance:
+    build: .
+    container_name: fault-tolerance
+    command: java -Djava.rmi.server.hostname=faulttolerance faulttolerance.FaultToleranceServer
     environment:
       - RMI_REGISTRY_HOST=rmi-registry
     depends_on:
