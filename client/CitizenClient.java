@@ -2,6 +2,7 @@ package client;
 
 import common.CentralRegistryClient;
 import common.EmergencyService;
+import common.RequestStore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -165,6 +166,37 @@ public class CitizenClient {
             }
 
             /*
+             * =====================================================
+             * SAVE REQUESTS FOR OTHER CITYSYNC MODULES
+             * =====================================================
+             *
+             * The same requests entered here will later be used
+             * by Load Balancing and Fault Tolerance.
+             *
+             * This does NOT modify the actual emergency processing.
+             */
+
+            List<String> sharedRequests =
+                    new ArrayList<>();
+
+            for (EmergencyRequest request : requests) {
+
+                sharedRequests.add(
+                        request.getIncidentType()
+                                + " - "
+                                + request.getLocation()
+                );
+            }
+
+            RequestStore.saveRequests(sharedRequests);
+
+            System.out.println();
+            System.out.println(
+                    "[CitySync] Requests saved for "
+                            + "Load Balancing and Fault Tolerance."
+            );
+
+            /*
              * Display entered requests
              */
 
@@ -245,7 +277,15 @@ public class CitizenClient {
             );
 
             System.out.println(
-                    "Emergency services are processing them."
+                    "The same requests are available for:"
+            );
+
+            System.out.println(
+                    "1. Load Balancing"
+            );
+
+            System.out.println(
+                    "2. Fault Tolerance"
             );
 
             System.out.println(

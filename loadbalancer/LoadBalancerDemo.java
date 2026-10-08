@@ -1,14 +1,13 @@
 package loadbalancer;
 
 import common.CentralRegistryClient;
+import common.RequestStore;
 
-import java.util.Scanner;
+import java.util.List;
 
 public class LoadBalancerDemo {
 
     public static void main(String[] args) {
-
-        Scanner scanner = new Scanner(System.in);
 
         try {
 
@@ -29,33 +28,72 @@ public class LoadBalancerDemo {
                             + loadBalancer.getAlgorithm()
             );
 
-            System.out.println();
-            System.out.print("Enter number of requests: ");
+            /*
+             * Load the requests entered during
+             * the initial CitizenClient step.
+             */
 
-            int numberOfRequests = scanner.nextInt();
-            scanner.nextLine();
+            List<String> requests =
+                    RequestStore.loadRequests();
 
-            System.out.println();
+            /*
+             * Check whether requests are available.
+             */
 
-            for (int i = 1; i <= numberOfRequests; i++) {
+            if (requests.isEmpty()) {
 
-                System.out.println("------------------------------------------");
-                System.out.println("Request " + i);
-
-                System.out.print(
-                        "Enter Crisis (Fire/Accident/Medical): "
+                System.out.println();
+                System.out.println(
+                        "No requests found."
                 );
 
-                String crisis = scanner.nextLine();
-
-                System.out.print(
-                        "Enter Location: "
+                System.out.println(
+                        "Please run CitizenClient first "
+                                + "to enter the emergency requests."
                 );
 
-                String location = scanner.nextLine();
+                return;
+            }
+
+            System.out.println();
+            System.out.println(
+                    "Using "
+                            + requests.size()
+                            + " requests from the initial application."
+            );
+
+            System.out.println();
+
+            /*
+             * Process the same requests using
+             * the Load Balancer.
+             */
+
+            for (int i = 0;
+                 i < requests.size();
+                 i++) {
 
                 String request =
-                        crisis + " - " + location;
+                        requests.get(i);
+
+                System.out.println(
+                        "------------------------------------------"
+                );
+
+                System.out.println(
+                        "Request " + (i + 1)
+                );
+
+                System.out.println(
+                        "Input   : " + request
+                );
+
+                /*
+                 * Send request to Load Balancer.
+                 *
+                 * Existing Round-Robin logic
+                 * remains unchanged.
+                 */
 
                 String response =
                         loadBalancer.processRequest(
@@ -65,32 +103,31 @@ public class LoadBalancerDemo {
                 System.out.println();
 
                 System.out.println(
-                        "Crisis  : " + crisis
-                );
-
-                System.out.println(
-                        "Location: " + location
-                );
-
-                System.out.println(
                         "Result  : " + response
                 );
             }
 
             System.out.println();
-            System.out.println("==========================================");
-            System.out.println("     ALL REQUESTS PROCESSED SUCCESSFULLY");
-            System.out.println("==========================================");
+            System.out.println(
+                    "=========================================="
+            );
+
+            System.out.println(
+                    "     ALL REQUESTS PROCESSED SUCCESSFULLY"
+            );
+
+            System.out.println(
+                    "=========================================="
+            );
 
         } catch (Exception e) {
 
             System.err.println();
-            System.err.println("Load balancing failed.");
+            System.err.println(
+                    "Load balancing failed."
+            );
+
             e.printStackTrace();
-
-        } finally {
-
-            scanner.close();
         }
     }
 }

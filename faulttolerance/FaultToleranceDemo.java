@@ -1,15 +1,13 @@
 package faulttolerance;
 
 import common.CentralRegistryClient;
+import common.RequestStore;
 
-import java.util.Scanner;
+import java.util.List;
 
 public class FaultToleranceDemo {
 
     public static void main(String[] args) {
-
-        Scanner scanner =
-                new Scanner(System.in);
 
         try {
 
@@ -43,47 +41,63 @@ public class FaultToleranceDemo {
                     faultTolerance.getStatus()
             );
 
-            System.out.print(
-                    "Enter number of requests: "
-            );
+            /*
+             * Load the requests entered during
+             * the initial CitizenClient step.
+             */
 
-            int numberOfRequests =
-                    scanner.nextInt();
+            List<String> requests =
+                    RequestStore.loadRequests();
 
-            scanner.nextLine();
+            /*
+             * Check whether requests are available.
+             */
+
+            if (requests.isEmpty()) {
+
+                System.out.println();
+
+                System.out.println(
+                        "No requests found."
+                );
+
+                System.out.println(
+                        "Please run CitizenClient first "
+                                + "to enter the emergency requests."
+                );
+
+                return;
+            }
 
             System.out.println();
 
-            for (int i = 1;
-                 i <= numberOfRequests;
+            System.out.println(
+                    "Using "
+                            + requests.size()
+                            + " requests from the initial application."
+            );
+
+            System.out.println();
+
+            /*
+             * Process the same requests using
+             * the Fault Tolerance module.
+             */
+
+            for (int i = 0;
+                 i < requests.size();
                  i++) {
+
+                String request =
+                        requests.get(i);
 
                 System.out.println(
                         "------------------------------------------"
                 );
 
                 System.out.println(
-                        "Request " + i
+                        "Request " + (i + 1)
                 );
-
-                System.out.print(
-                        "Enter Crisis (Fire/Accident/Medical): "
-                );
-
-                String crisis =
-                        scanner.nextLine();
-
-                System.out.print(
-                        "Enter Location: "
-                );
-
-                String location =
-                        scanner.nextLine();
-
-                String request =
-                        crisis
-                                + " - "
-                                + location;
 
                 System.out.println();
 
@@ -93,6 +107,11 @@ public class FaultToleranceDemo {
                 );
 
                 try {
+
+                    /*
+                     * Existing fault-tolerance logic
+                     * is called here.
+                     */
 
                     String result =
                             faultTolerance.processRequest(
@@ -143,10 +162,6 @@ public class FaultToleranceDemo {
             );
 
             e.printStackTrace();
-
-        } finally {
-
-            scanner.close();
         }
     }
 }

@@ -4,6 +4,5 @@ WORKDIR /app
 
 COPY . .
 
-RUN javac clock/*.java common/*.java emergency/*.java hospital/*.java traffic/*.java weather/*.java client/*.java election/*.java loadbalancer/*.java faulttolerance/*.java ClockClient.java ClockTest.java
-
+RUN javac clock/*.java common/*.java emergency/*.java hospital/*.java traffic/*.java weather/*.java client/*.java election/*.java loadbalancer/*.java replication/*.java faulttolerance/*.java
 CMD ["java", "emergency.EmergencyServer"]
